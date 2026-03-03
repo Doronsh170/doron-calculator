@@ -1,0 +1,405 @@
+<!DOCTYPE html>
+<html lang="he">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>מחשבון תשואות - נתוני אמת</title>
+    <link href="https://cdn.jsdelivr.net/npm/tailwindcss@2.2.19/dist/tailwind.min.css" rel="stylesheet">
+    <link href="https://fonts.googleapis.com/css2?family=Heebo:wght@300;400;700&display=swap" rel="stylesheet">
+    <style>
+        body {
+            font-family: 'Heebo', sans-serif;
+            direction: rtl;
+            text-align: right;
+        }
+        .container {
+            max-width: 1200px;
+        }
+        .input-group label {
+            display: block;
+            margin-bottom: 0.5rem;
+            font-weight: bold;
+            font-size: 0.9rem;
+        }
+        .input-group input {
+            width: 100%;
+            padding: 0.75rem;
+            border-radius: 0.5rem;
+            border: 1px solid #e5e7eb;
+            transition: all 0.2s;
+        }
+        .input-group input:focus {
+            outline: none;
+            border-color: #6366f1;
+            box-shadow: 0 0 0 3px rgba(99, 102, 241, 0.25);
+        }
+        .button-primary {
+            background-color: #4f46e5;
+            color: white;
+            padding: 1rem 2.5rem;
+            border-radius: 0.5rem;
+            font-weight: bold;
+            font-size: 1.1rem;
+            transition: background-color 0.2s, transform 0.1s;
+            box-shadow: 0 4px 6px rgba(0, 0, 0, 0.1);
+            cursor: pointer;
+        }
+        .button-primary:hover {
+            background-color: #4338ca;
+            transform: translateY(-1px);
+        }
+        .button-primary:active {
+            transform: translateY(1px);
+        }
+        table {
+            width: 100%;
+            border-collapse: separate;
+            border-spacing: 0 0.5rem;
+            direction: rtl;
+        }
+        th, td {
+            padding: 0.75rem;
+            text-align: right;
+        }
+        th {
+            background-color: #f3f4f6;
+            font-weight: bold;
+            color: #374151;
+            border-bottom: 2px solid #e5e7eb;
+            font-size: 0.9rem;
+        }
+        td {
+            background-color: white;
+            border-radius: 0px;
+            border-bottom: 1px solid #f0f0f0;
+            font-size: 0.95rem;
+        }
+        tr:last-child td:first-child { border-bottom-right-radius: 0.5rem; }
+        tr:last-child td:last-child { border-bottom-left-radius: 0.5rem; }
+        tr:first-child td:first-child { border-top-right-radius: 0.5rem; }
+        tr:first-child td:last-child { border-top-left-radius: 0.5rem; }
+        
+        .scenario-box {
+            background-color: white;
+            padding: 1.5rem;
+            border-radius: 1rem;
+            box-shadow: 0 10px 15px -3px rgba(0, 0, 0, 0.1);
+            display: flex;
+            flex-direction: column;
+            height: 100%;
+        }
+        .scenario-box.pessimistic { border-top: 5px solid #10b981; }
+        .scenario-box.realistic { border-top: 5px solid #3b82f6; }
+        .scenario-box.optimistic { border-top: 5px solid #ef4444; }
+
+        .overflow-x-auto::-webkit-scrollbar {
+            height: 8px;
+        }
+        .overflow-x-auto::-webkit-scrollbar-track {
+            background: #f1f1f1; 
+        }
+        .overflow-x-auto::-webkit-scrollbar-thumb {
+            background: #c7c7c7; 
+            border-radius: 4px;
+        }
+        .overflow-x-auto::-webkit-scrollbar-thumb:hover {
+            background: #a8a8a8; 
+        }
+        .positive-yield { color: #16a34a; font-weight: bold; }
+        .negative-yield { color: #dc2626; font-weight: bold; }
+        
+        .disabled-input {
+            background-color: #f3f4f6;
+            color: #9ca3af;
+            cursor: not-allowed;
+        }
+
+        /* Fallback styles in case Tailwind doesn't load */
+        .hidden { display: none !important; }
+        body { background-color: #f3f4f6; display: flex; align-items: center; justify-content: center; min-height: 100vh; padding: 1rem; margin: 0; }
+        .container { max-width: 1200px; background: white; padding: 2rem; border-radius: 1rem; box-shadow: 0 10px 25px rgba(0,0,0,0.1); width: 100%; margin: auto; }
+        h1 { font-size: 1.875rem; font-weight: bold; text-align: center; color: #1f2937; margin-bottom: 0.25rem; }
+        .subtitle { font-size: 1rem; color: #4b5563; text-align: center; font-weight: 500; margin-bottom: 1.5rem; }
+        .info-box { background-color: #eef2ff; border-right: 4px solid #818cf8; padding: 1rem; margin-bottom: 2rem; border-radius: 0.5rem; }
+        .info-box p { font-size: 0.875rem; color: #4338ca; font-weight: 500; }
+        .inputs-grid { display: grid; grid-template-columns: repeat(auto-fit, minmax(200px, 1fr)); gap: 1.5rem; margin-bottom: 2rem; }
+        .text-center { text-align: center; }
+        .mb-10 { margin-bottom: 2.5rem; }
+        .grid-3 { display: grid; grid-template-columns: repeat(auto-fit, minmax(300px, 1fr)); gap: 1.5rem; }
+        .bg-gray-50 { background-color: #f9fafb; }
+        .p-4 { padding: 1rem; }
+        .rounded-lg { border-radius: 0.5rem; }
+        .mb-4 { margin-bottom: 1rem; }
+        .border { border: 1px solid #e5e7eb; }
+        .text-sm { font-size: 0.875rem; }
+        .text-gray-600 { color: #4b5563; }
+        .text-2xl { font-size: 1.5rem; }
+        .font-bold { font-weight: bold; }
+        .text-green-600 { color: #16a34a; }
+        .text-blue-600 { color: #2563eb; }
+        .text-red-600 { color: #dc2626; }
+        .mb-2 { margin-bottom: 0.5rem; }
+        .flex { display: flex; }
+        .justify-between { justify-content: space-between; }
+        .text-xs { font-size: 0.75rem; }
+        .text-gray-500 { color: #6b7280; }
+        .border-t { border-top: 1px solid #e5e7eb; }
+        .pt-2 { padding-top: 0.5rem; }
+        .mt-2 { margin-top: 0.5rem; }
+        .text-gray-700 { color: #374151; }
+        .overflow-x-auto { overflow-x: auto; }
+        .flex-grow { flex-grow: 1; }
+        .w-full { width: 100%; }
+        .text-xl { font-size: 1.25rem; }
+        .mb-2 { margin-bottom: 0.5rem; }
+        .text-gray-800 { color: #1f2937; }
+        .mt-10 { margin-top: 2.5rem; }
+        .pt-6 { padding-top: 1.5rem; }
+        .border-t { border-top: 1px solid #e5e7eb; }
+        .border-gray-200 { border-color: #e5e7eb; }
+        .bg-red-50 { background-color: #fef2f2; }
+        .font-semibold { font-weight: 600; }
+        .font-medium { font-weight: 500; }
+    </style>
+</head>
+<body class="bg-gray-100 flex items-center justify-center min-h-screen p-4">
+
+<div class="container bg-white p-8 rounded-2xl shadow-xl w-full">
+    <h1 class="text-3xl font-bold text-center text-gray-800 mb-1">מחשבון ערך עתידי</h1>
+    <p class="text-md text-gray-600 text-center font-medium mb-6">מאת: דורון שרייבמן</p>
+    
+    <div class="bg-indigo-50 border-r-4 border-indigo-400 p-4 mb-8 rounded-lg">
+        <div class="flex justify-center items-center">
+            <div class="mr-3">
+                <p class="text-sm text-indigo-700 font-medium">
+                    החישוב מתבסס על תשואות אמת מ-30 שנות פעילות (1995-2024) לכל רמת סיכון.
+                </p>
+            </div>
+        </div>
+    </div>
+
+    <div class="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-4 gap-6 mb-8">
+        <div class="input-group">
+            <label for="initialAmount" class="text-gray-700">סכום התחלתי (₪)</label>
+            <input type="number" id="initialAmount" value="100000" class="rounded-lg shadow-sm">
+        </div>
+        <div class="input-group">
+            <label for="monthlyDeposit" class="text-gray-700">הפקדה חודשית (₪)</label>
+            <input type="number" id="monthlyDeposit" value="2000" class="rounded-lg shadow-sm">
+        </div>
+        <div class="input-group">
+            <label for="managementFee" class="text-gray-700">דמי ניהול שנתיים (%)</label>
+            <input type="number" id="managementFee" value="0.7" step="0.01" class="rounded-lg shadow-sm">
+        </div>
+        <div class="input-group">
+            <label for="years" class="text-gray-700">מספר שנים</label>
+            <input type="number" id="years" value="30" class="rounded-lg shadow-sm">
+        </div>
+    </div>
+
+    <div class="text-center mb-10">
+        <button id="calculateBtn" class="button-primary w-full md:w-auto">הרץ סימולציה</button>
+    </div>
+
+    <div id="results-container" class="grid-3 hidden" style="display:none;">
+
+        <!-- Low Risk -->
+        <div id="pessimistic-scenario" class="scenario-box pessimistic">
+            <h2 class="text-xl font-bold mb-2 text-gray-800">סיכון נמוך</h2>
+            <p class="text-sm text-gray-500 mb-4">נתונים היסטוריים (סיכון נמוך)</p>
+            <div class="bg-gray-50 p-4 rounded-lg mb-4 border border-gray-100">
+                <p class="text-sm text-gray-600">סכום סופי:</p>
+                <p id="finalAmount-pessimistic" class="text-2xl font-bold text-green-600 mb-2"></p>
+                <div class="flex justify-between text-xs text-gray-500 border-t pt-2">
+                    <span>הפקדות: <span id="totalContributions-pessimistic"></span></span>
+                    <span>רווח/הפסד: <span id="totalInterest-pessimistic"></span></span>
+                </div>
+                 <div class="mt-2 text-xs text-gray-500 border-t pt-2">
+                     ממוצע תשואה בפועל: <span id="avgYield-pessimistic" class="font-bold text-gray-700"></span>
+                </div>
+            </div>
+            <div class="overflow-x-auto flex-grow">
+                <table class="w-full text-sm">
+                    <thead><tr><th>שנה</th><th>תשואה שנתית</th><th>סכום מצטבר</th></tr></thead>
+                    <tbody id="resultsTableBody-pessimistic"></tbody>
+                </table>
+            </div>
+        </div>
+
+        <!-- Medium Risk -->
+        <div id="realistic-scenario" class="scenario-box realistic">
+            <h2 class="text-xl font-bold mb-2 text-gray-800">סיכון בינוני</h2>
+            <p class="text-sm text-gray-500 mb-4">נתונים היסטוריים (סיכון בינוני)</p>
+            <div class="bg-gray-50 p-4 rounded-lg mb-4 border border-gray-100">
+                <p class="text-sm text-gray-600">סכום סופי:</p>
+                <p id="finalAmount-realistic" class="text-2xl font-bold text-blue-600 mb-2"></p>
+                <div class="flex justify-between text-xs text-gray-500 border-t pt-2">
+                    <span>הפקדות: <span id="totalContributions-realistic"></span></span>
+                    <span>רווח/הפסד: <span id="totalInterest-realistic"></span></span>
+                </div>
+                <div class="mt-2 text-xs text-gray-500 border-t pt-2">
+                     ממוצע תשואה בפועל: <span id="avgYield-realistic" class="font-bold text-gray-700"></span>
+                </div>
+            </div>
+            <div class="overflow-x-auto flex-grow">
+                <table class="w-full text-sm">
+                    <thead><tr><th>שנה</th><th>תשואה שנתית</th><th>סכום מצטבר</th></tr></thead>
+                    <tbody id="resultsTableBody-realistic"></tbody>
+                </table>
+            </div>
+        </div>
+
+        <!-- High Risk -->
+        <div id="optimistic-scenario" class="scenario-box optimistic">
+            <h2 class="text-xl font-bold mb-2 text-gray-800">סיכון גבוה</h2>
+            <p class="text-sm text-gray-500 mb-4">נתונים היסטוריים (סיכון גבוה)</p>
+            <div class="bg-gray-50 p-4 rounded-lg mb-4 border border-gray-100">
+                <p class="text-sm text-gray-600">סכום סופי:</p>
+                <p id="finalAmount-optimistic" class="text-2xl font-bold text-red-600 mb-2"></p>
+                <div class="flex justify-between text-xs text-gray-500 border-t pt-2">
+                    <span>הפקדות: <span id="totalContributions-optimistic"></span></span>
+                    <span>רווח/הפסד: <span id="totalInterest-optimistic"></span></span>
+                </div>
+                <div class="mt-2 text-xs text-gray-500 border-t pt-2">
+                     ממוצע תשואה בפועל: <span id="avgYield-optimistic" class="font-bold text-gray-700"></span>
+                </div>
+            </div>
+            <div class="overflow-x-auto flex-grow">
+                <table class="w-full text-sm">
+                    <thead><tr><th>שנה</th><th>תשואה שנתית</th><th>סכום מצטבר</th></tr></thead>
+                    <tbody id="resultsTableBody-optimistic"></tbody>
+                </table>
+            </div>
+        </div>
+    </div>
+
+    <div class="mt-10 pt-6 border-t border-gray-200 text-center text-xs text-gray-500">
+        <p><strong>גילוי נאות:</strong> המחשבון נועד למטרות הדגמה וחינוך פיננסי בלבד. התוצאות המוצגות מתבססות על נתוני תשואה היסטוריים בלבד (1995–2024) ואינן מהוות תחזית, הבטחה או התחייבות לתשואה עתידית כלשהי. ביצועי עבר אינם ערובה לביצועים עתידיים. החישובים אינם מביאים בחשבון את מצבו הפיננסי האישי של המשתמש, מטרות ההשקעה, אופק ההשקעה, רמת הסיכון המתאימה לו, חבות המס הרלוונטית, עלויות עסקה, או כל גורם אישי אחר. אין לראות בתוצאות המחשבון משום ייעוץ השקעות, ייעוץ פנסיוני, ייעוץ מס או כל ייעוץ פיננסי אחר. השימוש במידע המוצג הינו באחריות המשתמש בלבד. לפני כל החלטת השקעה מומלץ להתייעץ עם יועץ השקעות מורשה בעל רישיון כדין. ט.ל.ח.</p>
+    </div>
+</div>
+
+<script>
+    // נתוני תשואה היסטוריים (1995-2024)
+    const rawYieldsLow = [22.66, 6.42, 13.62, 15.60, 0.18, 9.39, 1.67, 5.01, 6.11, 5.12, 3.33, 5.27, 8.12, -0.30, -0.37, 7.07, 10.05, 5.98, 0.61, 9.16, 1.05, 2.83, 6.99, -0.06, 13.25, 10.47, 3.05, -13.89, 8.60, 5.03];
+    const rawYieldsMedium = [30.82, 14.37, 23.60, 22.47, 9.89, 0.71, -4.99, -7.81, 17.20, 8.09, 4.06, 10.29, 6.78, -14.72, 11.58, 11.81, 6.85, 10.61, 15.11, 11.89, 1.21, 7.30, 14.10, -2.55, 22.29, 14.80, 15.54, -16.96, 17.26, 14.61];
+    const rawYieldsHigh = [35.83, 20.56, 30.78, 27.00, 17.98, -6.46, -10.11, -18.26, 25.56, 10.11, 4.63, 14.24, 5.95, -30.89, 22.23, 14.18, 3.49, 14.60, 28.03, 13.24, 1.37, 10.66, 19.73, -3.81, 29.05, 17.35, 25.18, -18.02, 23.84, 22.23];
+
+    // המרה לאחוזים עשרוניים (חלוקה ב-100)
+    const yieldsLow = rawYieldsLow.map(y => y / 100);
+    const yieldsMedium = rawYieldsMedium.map(y => y / 100);
+    const yieldsHigh = rawYieldsHigh.map(y => y / 100);
+
+    function formatCurrency(amount) {
+        return amount.toLocaleString('he-IL', { style: 'currency', currency: 'ILS', maximumFractionDigits: 0 });
+    }
+
+    /**
+     * @param {Array} yieldsArray - מערך התשואות הספציפי למסלול
+     */
+    function calculateScenario(initialAmount, monthlyDeposit, years, managementFee, yieldsArray) {
+        let currentAmount = initialAmount;
+        let totalContributions = initialAmount;
+        const yearlyResults = [];
+        let totalAnnualYield = 0;
+
+        // שנת התחלה: 1995 (אינדקס 0)
+        const startYearIndex = 0; 
+
+        for (let year = 1; year <= years; year++) {
+            // בחירת התשואה לפי האינדקס עם תמיכה במחזוריות
+            const dataIndex = (startYearIndex + year - 1) % yieldsArray.length;
+            const annualYieldForThisYear = yieldsArray[dataIndex];
+            
+            totalAnnualYield += annualYieldForThisYear;
+
+            // חישוב חודשי
+            for (let month = 0; month < 12; month++) {
+                currentAmount += monthlyDeposit;
+                totalContributions += monthlyDeposit;
+
+                const monthlyInterest = currentAmount * (annualYieldForThisYear / 12);
+                currentAmount += monthlyInterest;
+
+                const monthlyFee = currentAmount * (managementFee / 12);
+                currentAmount -= monthlyFee;
+            }
+
+            yearlyResults.push({ 
+                year, 
+                amount: currentAmount, 
+                actualYield: annualYieldForThisYear 
+            });
+        }
+        
+        const totalInterest = currentAmount - totalContributions;
+        const averageActualYield = totalAnnualYield / years;
+
+        return { yearlyResults, finalAmount: currentAmount, totalInterest, totalContributions, averageActualYield };
+    }
+
+    function displayResults(results, containerId) {
+        const { yearlyResults, finalAmount, totalInterest, totalContributions, averageActualYield } = results;
+        document.getElementById(containerId).classList.remove('hidden');
+
+        document.getElementById(`finalAmount-${containerId.split('-')[0]}`).textContent = formatCurrency(finalAmount);
+        document.getElementById(`totalContributions-${containerId.split('-')[0]}`).textContent = formatCurrency(totalContributions);
+        
+        const avgYieldEl = document.getElementById(`avgYield-${containerId.split('-')[0]}`);
+        if(avgYieldEl) {
+            avgYieldEl.textContent = (averageActualYield * 100).toFixed(2) + '%';
+            avgYieldEl.className = "font-bold " + (averageActualYield >= 0 ? "text-green-600" : "text-red-600");
+        }
+        
+        const interestEl = document.getElementById(`totalInterest-${containerId.split('-')[0]}`);
+        interestEl.textContent = formatCurrency(totalInterest);
+        interestEl.className = totalInterest >= 0 ? 'text-green-600 font-semibold' : 'text-red-600 font-semibold';
+
+        const resultsTableBody = document.getElementById(`resultsTableBody-${containerId.split('-')[0]}`);
+        resultsTableBody.innerHTML = '';
+        
+        yearlyResults.forEach(result => {
+            const row = document.createElement('tr');
+            const yieldPercent = result.actualYield * 100;
+            const yieldClass = yieldPercent >= 0 ? 'positive-yield' : 'negative-yield';
+            
+            if (result.actualYield < -0.05) {
+                row.className = "bg-red-50";
+            }
+
+            row.innerHTML = `
+                <td class="text-gray-600 font-medium border-b">${result.year}</td>
+                <td class="${yieldClass} border-b" style="direction:ltr; text-align:right;">${yieldPercent.toFixed(2)}%</td>
+                <td class="text-gray-800 font-semibold border-b">${formatCurrency(result.amount)}</td>
+            `;
+            resultsTableBody.appendChild(row);
+        });
+    }
+
+    function calculateAllScenarios() {
+        const initialAmount = parseFloat(document.getElementById('initialAmount').value) || 0;
+        const monthlyDeposit = parseFloat(document.getElementById('monthlyDeposit').value) || 0;
+        const managementFee = parseFloat(document.getElementById('managementFee').value) / 100 || 0;
+        const years = parseInt(document.getElementById('years').value, 10) || 1;
+
+        if (years < 1) {
+            alert('אנא הזן מספר שנים חיובי');
+            return;
+        }
+
+        const resultsLowRisk = calculateScenario(initialAmount, monthlyDeposit, years, managementFee, yieldsLow);
+        const resultsMediumRisk = calculateScenario(initialAmount, monthlyDeposit, years, managementFee, yieldsMedium);
+        const resultsHighRisk = calculateScenario(initialAmount, monthlyDeposit, years, managementFee, yieldsHigh);
+
+        const rc = document.getElementById('results-container');
+        rc.classList.remove('hidden');
+        rc.style.display = 'grid';
+        displayResults(resultsLowRisk, 'pessimistic-scenario');
+        displayResults(resultsMediumRisk, 'realistic-scenario');
+        displayResults(resultsHighRisk, 'optimistic-scenario');
+    }
+
+    document.getElementById('calculateBtn').addEventListener('click', calculateAllScenarios);
+</script>
+
+</body>
+</html>
