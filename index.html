@@ -235,7 +235,7 @@ tbody tr:hover td{background:#eff5f8}
         </div>
         <div class="input-group">
             <label for="years" class="text-gray-700">מספר שנים</label>
-            <input type="number" id="years" value="30" class="rounded-lg shadow-sm">
+            <input type="number" id="years" value="30" min="1" max="30" step="1" class="rounded-lg shadow-sm">
         </div>
     </div>
 
@@ -350,22 +350,20 @@ tbody tr:hover td{background:#eff5f8}
         const startYearIndex = 0; 
 
         for (let year = 1; year <= years; year++) {
-            // בחירת התשואה לפי האינדקס עם תמיכה במחזוריות
-            const dataIndex = (startYearIndex + year - 1) % yieldsArray.length;
+            // כל שנה משתמשת בשנה ההיסטורית המקבילה, ללא מחזור מלאכותי של הסדרה.
+            const dataIndex = startYearIndex + year - 1;
             const annualYieldForThisYear = yieldsArray[dataIndex];
             
             totalAnnualYield += annualYieldForThisYear;
 
-            // חישוב חודשי
+            // אותה שיטה כמו במפת החיסכון: המרה גאומטרית של תשואה שנתית
+            // וחישוב הפקדות בסוף חודש, לאחר התשואה ודמי הניהול.
+            const monthlyYield = Math.pow(1 + annualYieldForThisYear, 1 / 12) - 1;
+            const monthlyFee = managementFee / 12;
             for (let month = 0; month < 12; month++) {
+                currentAmount *= (1 + monthlyYield) * (1 - monthlyFee);
                 currentAmount += monthlyDeposit;
                 totalContributions += monthlyDeposit;
-
-                const monthlyInterest = currentAmount * (annualYieldForThisYear / 12);
-                currentAmount += monthlyInterest;
-
-                const monthlyFee = currentAmount * (managementFee / 12);
-                currentAmount -= monthlyFee;
             }
 
             yearlyResults.push({ 
@@ -425,8 +423,8 @@ tbody tr:hover td{background:#eff5f8}
         const managementFee = parseFloat(document.getElementById('managementFee').value) / 100 || 0;
         const years = parseInt(document.getElementById('years').value, 10) || 1;
 
-        if (years < 1) {
-            alert('אנא הזן מספר שנים חיובי');
+        if (!Number.isInteger(years) || years < 1 || years > rawYieldsLow.length) {
+            alert('יש לבחור תקופה של שנה עד 30 שנה, בהתאם לנתונים ההיסטוריים הזמינים.');
             return;
         }
 
